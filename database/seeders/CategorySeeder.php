@@ -16,7 +16,7 @@ class CategorySeeder extends Seeder
         $categories = ['Technology', 'Health', 'Environment', 'Education'];
 
         foreach ($categories as $name) {
-            // Use firstOrCreate to make the seeder idempotent (safe to run multiple times)
+            // idempotent: only create when missing
             Category::firstOrCreate(['name' => $name]);
         }
     }

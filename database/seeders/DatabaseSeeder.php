@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // Create or update the test user so seeding is safe to run multiple times
+        // Create or update a test user so seeding is safe to run multiple times
         User::updateOrCreate(
             ['email' => 'test@example.com'],
             [

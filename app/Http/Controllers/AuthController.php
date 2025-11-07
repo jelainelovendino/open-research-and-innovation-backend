@@ -16,13 +16,32 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            // profile fields required by your users table
+            'course' => 'required|string|max:255',
+            'school' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'bio' => 'sometimes|nullable|string',
         ]);
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'course' => $validated['course'],
+            'school' => $validated['school'],
+            'department' => $validated['department'],
+            'bio' => $validated['bio'] ?? null,
         ]);
-        return response()->json(['message' => 'User registered successfully', 'user' => $user], 201);
+
+        // return an access token so client can authenticate immediately
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'User registered successfully',
+            'user' => $user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ], 201);
     }
     
     //Login user and create token
