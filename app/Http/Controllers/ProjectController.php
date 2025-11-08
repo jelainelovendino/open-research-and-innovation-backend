@@ -163,4 +163,15 @@ class ProjectController extends Controller
 
         return response()->json($projects);
     }
+
+    public function myProjects()
+{
+    $projects = Project::where('user_id', Auth::id())
+        ->with('category')
+        ->latest()
+        ->get();
+
+    return response()->json($projects);
+}
+
 }
