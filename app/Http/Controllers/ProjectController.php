@@ -79,46 +79,49 @@ class ProjectController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //1.Find the project by id
+        // 1. Find the project by id
         $project = Project::findOrFail($id);
 
-        //2.Make sure the logged in user owns the project
-       if ($user->role !== 'admin' && $project->user_id !== $user->id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $project->update($request->all());
-        return response()->json($project);
-
-        //3.Validate the data
-        $request->validate([
+        // 2. Validate the data
+        $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
             'category_id' => 'sometimes|required|exists:categories,id',
             'file' => 'sometimes|file|mimes:pdf,docx|max:20480', // Max 20MB
             'upload_date' => 'sometimes|required|date',
         ]);
-        //4.If there is a new file, replace the old one
-        if ($request->hasFile('file')) {
-            //Delete the old file if it exists
-            if ($project->file_path && \Storage::disk('public')->exists($project->file_path)) {
-                \Storage::disk('public')->delete($project->file_path);
-            }
-            //Store the new file
-            $file_path = $request->file('file')->store('projects', 'public');
-            $project->file_path = $file_path;
+
+        // 3. Authorize the user
+        $user = Auth::user();
+        if ($user->role !== 'admin' && $project->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
-        //5.Update the other details
+
+        // 4. If there is a new file, replace the old one
+        if ($request->hasFile('file')) {
+            // Delete the old file if it exists
+            if ($project->file_path && Storage::disk('public')->exists($project->file_path)) {
+                Storage::disk('public')->delete($project->file_path);
+            }
+
+            // Store the new file
+            $file_path = $request->file('file')->store('projects', 'public');
+        } else {
+            $file_path = $project->file_path;
+        }
+
+        // 5. Update the project details
         $project->update([
-            'title' => $request->title ?? $project->title,
-            'description' => $request->description ?? $project->description,
-            'category_id' => $request->category_id ?? $project->category_id,
-            'upload_date' => $request->upload_date ?? $project->upload_date,
-            'file_path' => $project->file_path, //keep or replace if new file
+            'title' => $validated['title'] ?? $project->title,
+            'description' => $validated['description'] ?? $project->description,
+            'category_id' => $validated['category_id'] ?? $project->category_id,
+            'upload_date' => $validated['upload_date'] ?? $project->upload_date,
+            'file_path' => $file_path,
         ]);
 
-        //6.Return a success message
-        return response()->json(['message' => 'Project updated successfully']);
+        // Refresh and return the updated project
+        $project->refresh();
+        return response()->json(['message' => 'Project updated successfully', 'project' => $project]);
     }
 
     /**
