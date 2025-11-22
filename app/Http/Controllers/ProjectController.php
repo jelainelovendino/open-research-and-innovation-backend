@@ -83,9 +83,12 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
 
         //2.Make sure the logged in user owns the project
-        if ($project->user_id !== Auth::id()) {
+       if ($user->role !== 'admin' && $project->user_id !== $user->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
+
+        $project->update($request->all());
+        return response()->json($project);
 
         //3.Validate the data
         $request->validate([
@@ -127,10 +130,10 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
 
         //2.Make sure the logged in user owns the project
-        if ($project->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
+         $user = Auth::user();
+         if ($user->role !== 'admin' && $project->user_id !== $user->id) {
+             return response()->json(['message' => 'Unauthorized'], 403);
+    }
         //3.Delete the file from storage
         if ($project->file_path && \Storage::disk('public')->exists($project->file_path)) {
             \Storage::disk('public')->delete($project->file_path);
