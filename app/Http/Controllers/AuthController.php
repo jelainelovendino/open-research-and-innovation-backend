@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\File;
 
 class AuthController extends Controller
 {
@@ -32,6 +33,25 @@ class AuthController extends Controller
             'department' => $validated['department'],
             'bio' => $validated['bio'] ?? null,
         ]);
+
+        // assign a random default profile picture from public/default/profiles
+        // (the repo contains `public/default/profiles`, not `public/defaults/profiles`)
+        $profileDir = public_path('default/profiles');
+        if (File::exists($profileDir)) {
+            $files = File::files($profileDir);
+            $images = array_filter($files, function ($f) {
+                $ext = strtolower(pathinfo($f->getFilename(), PATHINFO_EXTENSION));
+                return in_array($ext, ['jpg', 'jpeg', 'png', 'webp']);
+            });
+            if (!empty($images)) {
+                $random = $images[array_rand($images)];
+                $user->profile_picture = 'default/profiles/' . $random->getFilename();
+                $user->save();
+            }
+        }
+
+        // ensure we return the latest user attributes (including profile_picture)
+        $user->refresh();
 
         // return an access token so client can authenticate immediately
         $token = $user->createToken('auth_token')->plainTextToken;
