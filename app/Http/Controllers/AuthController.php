@@ -17,7 +17,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            // profile fields required by your users table
+            // profile fields required by users table
             'course' => 'required|string|max:255',
             'school' => 'required|string|max:255',
             'department' => 'required|string|max:255',
@@ -35,7 +35,6 @@ class AuthController extends Controller
         ]);
 
         // assign a random default profile picture from public/default/profiles
-        // (the repo contains `public/default/profiles`, not `public/defaults/profiles`)
         $profileDir = public_path('default/profiles');
         if (File::exists($profileDir)) {
             $files = File::files($profileDir);
