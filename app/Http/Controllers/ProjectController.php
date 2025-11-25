@@ -7,6 +7,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class ProjectController extends Controller
 {
@@ -38,20 +39,25 @@ class ProjectController extends Controller
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'file' => 'required|file|mimes:pdf,docx|max:20480', // Max 20MB
-            'upload_date' => 'required|date',
         ]);
 
         //Store Uploaded file in storage/app/public/projects
         $file_path = $request->file('file')->store('projects', 'public');
 
-        //Save project info in the databse
+        // Get the category and assign a random thumbnail from the corresponding folder
+        $category = Category::findOrFail($request->category_id);
+        $thumbnail = $this->getRandomCategoryThumbnail($category);
+
+        //Save project info in the database
         Project::create([
             'title' => $request->title,
             'description' => $request->description,
             'file_path' => $file_path,
-            'upload_date' => $request->upload_date,
+            // Set upload_date server-side to current date
+            'upload_date' => now()->toDateString(),
             'category_id' => $request->category_id,
             'user_id' => Auth::id(), //logged in user id
+            'thumbnail' => $thumbnail,
         ]);
 
         return response()->json(['message' => 'Project uploaded successfully'], 201);
@@ -88,7 +94,6 @@ class ProjectController extends Controller
             'description' => 'sometimes|required|string',
             'category_id' => 'sometimes|required|exists:categories,id',
             'file' => 'sometimes|file|mimes:pdf,docx|max:20480', // Max 20MB
-            'upload_date' => 'sometimes|required|date',
         ]);
 
         // 3. Authorize the user
@@ -115,7 +120,7 @@ class ProjectController extends Controller
             'title' => $validated['title'] ?? $project->title,
             'description' => $validated['description'] ?? $project->description,
             'category_id' => $validated['category_id'] ?? $project->category_id,
-            'upload_date' => $validated['upload_date'] ?? $project->upload_date,
+            // Do not allow clients to change upload_date via API; keep existing value
             'file_path' => $file_path,
         ]);
 
@@ -171,13 +176,61 @@ class ProjectController extends Controller
     }
 
     public function myProjects()
-{
-    $projects = Project::where('user_id', Auth::id())
-        ->with('category')
-        ->latest()
-        ->get();
+    {
+        $projects = Project::where('user_id', Auth::id())
+            ->with('category')
+            ->latest()
+            ->get();
 
-    return response()->json($projects);
-}
+        return response()->json($projects);
+    }
+
+    /**
+     * Get a random thumbnail from the category's default folder.
+     * 
+     * Folder structure: public/default-categories/{categorySlug}/
+     * Categories: educ, env, tech, med
+     * 
+     * @param Category $category
+     * @return string|null Relative path to the thumbnail (e.g., 'default-categories/educ/image1.jpg')
+     */
+    public function getRandomCategoryThumbnail(Category $category): ?string
+    {
+        // Map category names to folder slugs
+        $categoryMapping = [
+            'education' => 'educ',
+            'environment' => 'env',
+            'technology' => 'tech',
+            'health' => 'med',
+        ];
+
+        // Get the folder slug based on category name (case-insensitive)
+        $slug = $categoryMapping[strtolower($category->name)] ?? null;
+
+        if (!$slug) {
+            return null;
+        }
+
+        // Build the path to the category folder (actual repo folder is `public/default/categories/{slug}`)
+        $categoryFolderPath = public_path("default/categories/{$slug}");
+
+        // Check if the folder exists
+        if (!File::isDirectory($categoryFolderPath)) {
+            return null;
+        }
+
+        // Get all image files from the folder (jpg, jpeg, png, webp, gif)
+        $images = File::glob($categoryFolderPath . '/*.{jpg,jpeg,png,webp,gif}', GLOB_BRACE);
+
+        if (empty($images)) {
+            return null;
+        }
+
+        // Pick a random image
+        $randomImage = $images[array_rand($images)];
+
+        // Return the relative path from public folder
+        return 'default/categories/' . $slug . '/' . basename($randomImage);
+    }
 
 }
