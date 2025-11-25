@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
@@ -98,35 +99,56 @@ class ProjectController extends Controller
 
         // 3. Authorize the user
         $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
         if ($user->role !== 'admin' && $project->user_id !== $user->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         // 4. If there is a new file, replace the old one
-        if ($request->hasFile('file')) {
-            // Delete the old file if it exists
-            if ($project->file_path && Storage::disk('public')->exists($project->file_path)) {
-                Storage::disk('public')->delete($project->file_path);
+            // 4. If there is a new file, replace the old one
+            $file_path = $project->file_path;
+            if ($request->hasFile('file')) {
+                // Delete the old file if it exists
+                if ($project->file_path && Storage::disk('public')->exists($project->file_path)) {
+                    Storage::disk('public')->delete($project->file_path);
+                }
+
+                // Store the new file
+                $file_path = $request->file('file')->store('projects', 'public');
             }
 
-            // Store the new file
-            $file_path = $request->file('file')->store('projects', 'public');
-        } else {
-            $file_path = $project->file_path;
-        }
-
         // 5. Update the project details
-        $project->update([
-            'title' => $validated['title'] ?? $project->title,
-            'description' => $validated['description'] ?? $project->description,
-            'category_id' => $validated['category_id'] ?? $project->category_id,
-            // Do not allow clients to change upload_date via API; keep existing value
-            'file_path' => $file_path,
+        $updateData = [];
+        
+        // Only include fields that were actually provided in the request
+        if (isset($validated['title'])) {
+            $updateData['title'] = $validated['title'];
+        }
+        if (isset($validated['description'])) {
+            $updateData['description'] = $validated['description'];
+        }
+        if (isset($validated['category_id'])) {
+            $updateData['category_id'] = $validated['category_id'];
+        }
+        
+        // Only update file_path if a new file was actually provided
+        if ($request->hasFile('file')) {
+            $updateData['file_path'] = $file_path;
+        }
+        
+        // Only perform update if there are actual changes
+        if (!empty($updateData)) {
+            $project->update($updateData);
+            $project->refresh();
+        }
+        
+        return response()->json([
+            'message' => 'Project updated successfully',
+            'updated_fields' => $updateData,
+            'project' => $project,
         ]);
-
-        // Refresh and return the updated project
-        $project->refresh();
-        return response()->json(['message' => 'Project updated successfully', 'project' => $project]);
     }
 
     /**
