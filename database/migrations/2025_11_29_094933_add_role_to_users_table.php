@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Only attempt to drop the column if it exists to avoid errors on some DB states
-        if (Schema::hasColumn('users', 'role')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->dropColumn('role');
-            });
-        }
+        Schema::table('users', function (Blueprint $table) {
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('user');
+            }
+        });
     }
 
     /**
@@ -25,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+             $table->dropColumn('role');
         });
     }
 };

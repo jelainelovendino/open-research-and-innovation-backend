@@ -34,5 +34,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed categories
         $this->call(CategorySeeder::class);
+        // Seed admin
+        $this->call(AdminSeeder::class);
     }
 }
