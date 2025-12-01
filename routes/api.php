@@ -30,3 +30,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function() {
     Route::put('/admin/projects/{project}', [ProjectController::class, 'update']); // edit
     Route::delete('/admin/projects/{project}', [ProjectController::class, 'destroy']); // delete
 });
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});

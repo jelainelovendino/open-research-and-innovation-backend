@@ -77,7 +77,20 @@ class AuthController extends Controller
             ]);
         }
         $token = $user->createToken('auth_token')->plainTextToken;
-        return response()->json(['access_token' => $token, 'token_type' => 'Bearer'], 200);
+        return response()->json([
+            'access_token' => $token, 
+            'token_type' => 'Bearer', 
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'course' => $user->course,
+                'school' => $user->school,
+                'department' => $user->department,
+                'bio' => $user->bio,
+                'profile_picture_url' => asset($user->profile_picture),
+            ]
+        ], 200);
     }
 
     //Logout user (Revoke the token)

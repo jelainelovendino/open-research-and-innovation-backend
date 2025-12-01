@@ -182,7 +182,7 @@ class ProjectController extends Controller
 
         if ($request->has('title')) {
             $query->where('title', 'like', '%' . $request->title . '%');
-        }
+         }
 
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
