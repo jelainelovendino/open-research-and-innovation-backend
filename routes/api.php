@@ -15,22 +15,19 @@ Route::get('/projects/search', [ProjectController::class, 'search']);
 Route::middleware('auth:sanctum')->group(function () {  
     Route::post('/logout',[AuthController::class, 'logout']);
     Route::apiResource('projects', ProjectController::class)->except(['index']);
+    Route::get('/my-projects', [ProjectController::class, 'myProjects']);
+    Route::get('/user', function (Request $request) {
+        return $request->user()->load(['projects' => function ($q) {
+            $q->latest();
+        }, 'projects.category']);
+    });
 });
 
-//Route to get my projects
-Route::middleware('auth:sanctum')->get('/my-projects', [ProjectController::class, 'myProjects']);
-    /**
-     * Display the specified resource.
-     */
-    
+//Admin routes (admin only)
 Route::middleware(['auth:sanctum', 'admin'])->group(function() {
     Route::get('/admin/projects', [ProjectController::class, 'index']); // browse all projects
-    Route::get('/admin/projects/search', [ProjectController::class, 'search']); // search
+    Route::get('/admin/projects/search', [ProjectController::class, 'search']); // search all projects
     Route::post('/admin/projects', [ProjectController::class, 'store']); // create
     Route::put('/admin/projects/{project}', [ProjectController::class, 'update']); // edit
     Route::delete('/admin/projects/{project}', [ProjectController::class, 'destroy']); // delete
-});
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
 });
