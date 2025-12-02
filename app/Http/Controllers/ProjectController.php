@@ -180,19 +180,29 @@ class ProjectController extends Controller
     {
         $query = Project::with(['user', 'category']);
 
-        if ($request->has('title')) {
+        // Filter by title (partial match)
+        if ($request->has('title') && !empty($request->title)) {
             $query->where('title', 'like', '%' . $request->title . '%');
-         }
+        }
 
-        if ($request->has('category_id')) {
+        // Filter by category_id
+        if ($request->has('category_id') && !empty($request->category_id)) {
             $query->where('category_id', $request->category_id);
         }
 
-        if ($request->has('upload_date')) {
+        // Filter by upload_date
+        if ($request->has('upload_date') && !empty($request->upload_date)) {
             $query->whereDate('upload_date', $request->upload_date);
         }
 
-        $projects = $query->latest()->get();
+        // Filter by user_id (admin can see all, non-admin can filter by user for public discovery)
+        if ($request->has('user_id') && !empty($request->user_id)) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Pagination (optional, default 15 per page)
+        $perPage = $request->input('per_page', 15);
+        $projects = $query->latest()->paginate($perPage);
 
         return response()->json($projects);
     }
