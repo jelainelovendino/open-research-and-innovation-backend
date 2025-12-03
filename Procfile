@@ -1,1 +1,1 @@
-web: vendor/bin/heroku-php-nginx public/
+web: php -S 0.0.0.0:${PORT:-8080} -t public/
