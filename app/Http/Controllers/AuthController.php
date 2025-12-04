@@ -17,10 +17,10 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            // profile fields required by users table
-            'course' => 'required|string|max:255',
-            'school' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
+            // profile fields optional
+            'course' => 'sometimes|nullable|string|max:255',
+            'school' => 'sometimes|nullable|string|max:255',
+            'department' => 'sometimes|nullable|string|max:255',
             'bio' => 'sometimes|nullable|string',
         ]);
 
@@ -28,9 +28,9 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'course' => $validated['course'],
-            'school' => $validated['school'],
-            'department' => $validated['department'],
+            'course' => $validated['course'] ?? 'Not specified',
+            'school' => $validated['school'] ?? 'Not specified',
+            'department' => $validated['department'] ?? 'Not specified',
             'bio' => $validated['bio'] ?? null,
         ]);
 
