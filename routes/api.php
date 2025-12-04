@@ -4,12 +4,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectController;
+use App\Models\Category;
 
 //Public routes (no login required)
 Route::post('/register',[AuthController::class, 'register']);
 Route::post('/login',[AuthController::class, 'login']);
 Route::get('/projects', [ProjectController::class, 'index']);
 Route::get('/projects/search', [ProjectController::class, 'search']);
+Route::get('/categories', function () {
+    return Category::all();
+});
 
 //Protected routes (login required)
 Route::middleware('auth:sanctum')->group(function () {  
