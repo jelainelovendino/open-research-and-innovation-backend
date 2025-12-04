@@ -20,7 +20,7 @@ class Project extends Model
         'thumbnail',
     ];
 
-    protected $appends = ['thumbnail_url'];
+    protected $appends = ['thumbnail_url', 'file_url'];
 
     public function user()
     {
@@ -41,4 +41,15 @@ class Project extends Model
         }
         return null;
     }
-}
+
+    /**
+     * Get the full URL for the project file.
+     */
+    public function getFileUrlAttribute(): ?string
+    {
+        if ($this->file_path) {
+            return asset('storage/' . $this->file_path);
+        }
+        return null;
+    }
+
