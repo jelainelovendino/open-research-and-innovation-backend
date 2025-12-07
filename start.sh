@@ -1,5 +1,6 @@
 #!/bin/bash
 php artisan migrate --force
+php artisan db:seed --force
 
 # Create storage symlink if it doesn't exist
 if [ ! -L public/storage ]; then
