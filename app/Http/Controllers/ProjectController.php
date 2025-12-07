@@ -39,7 +39,7 @@ class ProjectController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'file' => 'required|file|mimes:pdf,docx|max:20480', // Max 20MB
+            'file' => 'required|file|mimes:pdf,docx|max:5120', // Max 5MB
         ]);
 
         //Store Uploaded file in storage/app/public/projects
@@ -94,7 +94,7 @@ class ProjectController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
             'category_id' => 'sometimes|required|exists:categories,id',
-            'file' => 'sometimes|file|mimes:pdf,docx|max:20480', // Max 20MB
+            'file' => 'sometimes|file|mimes:pdf,docx|max:5120', // Max 5MB
         ]);
 
         // 3. Authorize the user
