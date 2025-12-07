@@ -88,6 +88,7 @@ class AuthController extends Controller
                 'school' => $user->school,
                 'department' => $user->department,
                 'bio' => $user->bio,
+                'role' => $user->role ?? 'user',
                 'profile_picture_url' => asset($user->profile_picture),
             ]
         ], 200);
