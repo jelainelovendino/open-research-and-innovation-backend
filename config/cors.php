@@ -8,7 +8,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000', // local dev
-        env('FRONTEND_URL', 'http://localhost:3000'), // production frontend URL from .env
+        env('FRONTEND_URL', 'https://orip-frontend.vercel.app/'), // production frontend URL from .env
     ],
 
     'allowed_headers' => ['*'],
